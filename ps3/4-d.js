@@ -1,26 +1,27 @@
+
 function parse(data) {
-  for (let i = 0; i < data.length; i++) {
-    for (let t = 0; t < data[i].length; t++) {
-      let dit = new Date(data[i][t].date);
-      data[i][t].Time = dit;
-      data[i][t].Date_string = `${dit.getFullYear()}-${1 + dit.getMonth()}-${dit.getDate()}`
-      data[i][t].Date = new Date(data[i][t].Date_string)
-      data[i][t].num = Number(data[i][t].calfresh)
+    for (let i = 0; i < data.length; i++) {
+      for (let t = 0; t < data[i].length; t++) {
+        let dit = new Date(data[i][t].date);
+        data[i][t].Time = dit;
+        data[i][t].Date_string = `${dit.getFullYear()}-${1 + dit.getMonth()}-${dit.getDate()}`
+        data[i][t].Date = new Date(data[i][t].Date_string)
+        data[i][t].num = Number(data[i][t].calfresh)
+      }
     }
+    return data;
   }
-  return data;
-}
 // make scales for line chart
 function make_scales(data, margin) {
-  return {
-    x: d3.scaleTime()
-      .domain(d3.extent(data[0].map(d => d.Time)))
-      .range([margin.left, 800 - margin.right]),
-    y: d3.scaleLinear()
-      .domain([0, 800000])
-      .range([380 - margin.bottom, margin.top])
+    return {
+      x: d3.scaleTime()
+        .domain(d3.extent(data[0].map(d => d.Time)))
+        .range([margin.left, 800 - margin.right]),
+      y: d3.scaleLinear()
+        .domain([0, 800000])
+        .range([380 - margin.bottom, margin.top])
+    }
   }
-}
 
 // draw lines with calfresh.csv
   function draw_lines(nested, scales) {
@@ -37,6 +38,7 @@ function make_scales(data, margin) {
         d: path_generator
       })
   }
+
   
 // draw x and y axes
   function draw_axes(scales, margin) {
@@ -54,11 +56,15 @@ function make_scales(data, margin) {
 
   // visualize line chart
   function visualize(data) {
+    
     let margin = {top: 10, right: 10, bottom: 20, left: 50}
     let nested = parse(data)
+
+    console.log(nested)
     let scales = make_scales(data, margin)
-    draw_lines(nested, scales)
     draw_axes(scales, margin)
+    draw_lines(nested, scales)
+    
   }
  
 // define some config for geomap
@@ -70,8 +76,21 @@ let width = 600,
       .range(d3.schemeGreens[9])
   }
 
+  function slope_highlights(d) {
+    
+
+    d3.select("#lines")
+      .selectAll("path")
+      .attrs({
+        class: e => e[0].county == d.county ? "plain" : "highlight",
+        "stroke-width": e => e[0].county == d.county ? 1 : 0.2
+      })
+
+  }
+  
 // mouseover event to show county name
-function mouseover(d) {
+function mouseover(ev, d) {
+  
   d3.select("#name")
     .select("text")
     .text(d.properties.county)
@@ -79,6 +98,8 @@ function mouseover(d) {
   d3.select("#map")
     .selectAll("path")
     .attr("stroke-width", e => e.properties.county == d.properties.county ? 2 : 0)
+
+  slope_highlights(d.properties.county) 
 }
 
 
@@ -100,19 +121,19 @@ function visualize_county(data) {
       fill: d => scales.fill(d.properties.calfresh),
       "stroke-width": 0
     })
-    .on("mouseover", (_, d) => mouseover(d));
+    .on("mouseover", (ev, d) => mouseover(ev, d));
 
-  // how county name
+  // show county name
   d3.select("#name")
     .append("text")
     .attr("transform", "translate(300, 100)")
     .text("hover a glacier")
 }
 
-// read data from calfresh.json
+// read data from calfresh.csv
+
 d3.json("calfresh.json")
   .then(visualize)
-
 // read data from counties.geojson
 d3.json("counties.geojson")
   .then(visualize_county)
