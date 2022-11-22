@@ -65,7 +65,7 @@ data2 <- data1 %>%
 ggplot(data2) +
   geom_line(aes(Year, n, col = Crime.Name1))
 
-### interactive plot with plotly
+### interactive plot with plotly, cited from https://plotly.com/r/line-charts/
 fig <- plot_ly(data2, x = ~Year, y = ~n, type = 'scatter', mode = 'lines', color = ~Crime.Name1)
 fig
 
